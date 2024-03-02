@@ -3,6 +3,8 @@
   import Presupuesto from './components/Presupuesto.vue';
   import ControlPresupuesto from './components/ControlPresupuesto.vue'
   import Modal from './components/Modal.vue'
+  import Gasto from './components/Gasto.vue';
+  import { generarId } from './helpers'
   import iconoNuevoGasto from './assets/img/nuevo-gasto.svg'
 
   const modal = reactive({
@@ -21,6 +23,8 @@
     fecha: Date.now()
   })
 
+  const gastos = ref([])
+
   const definirPresupuesto = (cantidad) => {
     presupuesto.value = cantidad
     disponible.value = cantidad
@@ -38,6 +42,23 @@
     setTimeout(() => {
       modal.mostrar = false
     }, 300);
+  }
+
+  const guardarGasto = () => {
+    gastos.value.push({
+      ...gasto,
+      id: generarId()
+    })
+
+    ocultarModal()
+
+    Object.assign(gasto, {
+      nombre: '',
+      cantidad: '',
+      categoria: '',
+      id: null,
+      fecha: Date.now()
+    })
   }
 
 </script>
@@ -62,6 +83,17 @@
     </header>
 
     <main v-if="presupuesto > 0">
+
+        <div class="listado-gastos contenedor">
+          <h2>{{ gastos.length > 0 ? 'Gastos' : 'No hay gastos' }}</h2>
+
+          <Gasto 
+            v-for="gasto in gastos"
+            :key="gasto.id"
+            :gasto="gasto"
+          />
+        </div>
+
         <div class="crear-gasto">
           <img 
             :src="iconoNuevoGasto"
@@ -73,10 +105,12 @@
         <Modal 
           v-if="modal.mostrar"
           @ocultar-modal="ocultarModal"
+          @guardar-gasto="guardarGasto"
           :modal="modal"
           v-model:nombre="gasto.nombre"
           v-model:cantidad="gasto.cantidad"
           v-model:categoria="gasto.categoria"
+
         />
     </main>
 
@@ -145,6 +179,13 @@
   .crear-gasto img {
     width: 5rem;
     cursor: pointer;
+  }
+  .listado-gastos {
+    margin-top: 10rem;
+  }
+  .listado-gastos h2 {
+    font-weight: 900;
+    color: var(--gris-oscuro);
   }
 
 </style>
