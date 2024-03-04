@@ -1,11 +1,11 @@
 <script setup>
-    import { ref } from 'vue'
-    import Alerta from './Alerta.vue'
+    import { ref, computed } from 'vue'
+    import Alerta from './Alerta.vue';
     import cerrarModal from '../assets/img/cerrar.svg'
 
     const error = ref('')
 
-    const emit = defineEmits(['ocultar-modal', 'guardar-gasto', 'update:nombre', 'update:cantidad', 'update:categoria'])
+    const emit = defineEmits(['ocultar-modal', 'guardar-gasto', 'update:nombre', 'update:cantidad', 'update:categoria', 'eliminar-gasto'])
 
     const props = defineProps({
         modal: {
@@ -14,41 +14,76 @@
         },
         nombre: {
             type: String,
-            required: true
+            required: true,
         },
         cantidad: {
             type: [String, Number],
-            required: true
+            required: true,
         },
         categoria: {
             type: String,
             required: true
+        },
+        disponible: {
+            type: Number,
+            required: true
+        },
+        id: {
+            type: [String, null],
+            required: true
         }
     })
 
+    const old = props.cantidad
+
     const agregarGasto = () => {
-        const { cantidad, categoria, nombre } = props
+        // Validar que no haya campos vacios
+        const { nombre, cantidad, categoria, disponible, id } = props
         if([nombre, cantidad, categoria].includes('')) {
             error.value = 'Todos los campos son obligatorios'
-
             setTimeout(() => {
                 error.value = ''
             }, 3000);
-
             return
         }
 
+        // Validar la cantidad
         if(cantidad <= 0) {
             error.value = 'Cantidad no válida'
-
             setTimeout(() => {
                 error.value = ''
             }, 3000);
-
             return
         }
+
+        // Validar que el usuario no gaste más de lo disponible
+        if(id) {
+            // Tomar en cuenta el gasto ya realizado
+            if( cantidad > old + disponible) {
+                error.value = 'Has excedido el Presupuesto'
+                setTimeout(() => {
+                    error.value = ''
+                }, 3000);
+                return 
+            }
+        } else {
+            if(cantidad > disponible) {
+                error.value = 'Has excedido el Presupuesto'
+                setTimeout(() => {
+                    error.value = ''
+                }, 3000);
+                return
+            }
+        }
+
+
         emit('guardar-gasto')
+
     }
+
+    const isEditing = computed(() => {
+        return props.id
+    })
 </script>
 
 <template>
@@ -56,47 +91,49 @@
         <div class="cerrar-modal">
             <img
                 :src="cerrarModal"
-                @click="$event => $emit('ocultar-modal')"
+                @click="$emit('ocultar-modal')"
             />
         </div>
         <div 
             class="contenedor contenedor-formulario"
             :class="[modal.animar ? 'animar' : 'cerrar']"
         >
-            <form 
+            <form
                 class="nuevo-gasto"
                 @submit.prevent="agregarGasto"
             >
-                <legend>Añadir Gasto</legend>
+                <legend>{{ isEditing ? 'Guadar Cambios' : 'Añadir Gasto' }}</legend>
 
-                <Alerta v-if="error"> {{ error }}</Alerta>
+                <Alerta v-if="error">{{error}}</Alerta>
 
                 <div class="campo">
                     <label for="nombre">Nombre Gasto:</label>
-                    <input 
+                    <input
                         type="text"
                         id="nombre"
-                        placeholder="Añade el nombre del gasto"
+                        placeholder="Añade el Nombre del Gasto"
                         :value="nombre"
-                        @input="$event => $emit('update:nombre', $event.target.value)"
+                        @input="$emit('update:nombre', $event.target.value)"
                     />
                 </div>
+
                 <div class="campo">
                     <label for="cantidad">Cantidad:</label>
-                    <input 
-                        type="text"
-                        id="nombre"
-                        placeholder="Añade la cantidad del gasto, ej. 30.000"
+                    <input
+                        type="number"
+                        id="cantidad"
+                        placeholder="Añade la cantidad del Gasto, ej. 300"
                         :value="cantidad"
-                        @input="$event => $emit('update:cantidad', +$event.target.value)"
+                        @input="$emit('update:cantidad', +$event.target.value)"
                     />
                 </div>
+
                 <div class="campo">
                     <label for="categoria">Categoría:</label>
-                    <select 
+                    <select
                         id="categoria"
                         :value="categoria"
-                        @input="$event => $emit('update:categoria', $event.target.value)"
+                        @input="$emit('update:categoria', $event.target.value)"
                     >
                         <option value="">-- Seleccione --</option>
                         <option value="ahorro">Ahorro</option>
@@ -108,14 +145,26 @@
                         <option value="suscripciones">Suscripciones</option>
                     </select>
                 </div>
+
                 <input 
                     type="submit"
-                    value="Añadir gasto"
-                />
+                    :value="[isEditing ? 'Guadar Cambios' : 'Añadir Gasto']"
+                >
             </form>
+
+            <button
+                type="button"
+                class="btn-eliminar"
+                v-if="isEditing"
+                @click="$emit('eliminar-gasto')"
+            >
+                Eliminar Gasto
+            </button>
         </div>
     </div>
 </template>
+
+
 
 <style scoped>
     .modal {
@@ -131,10 +180,11 @@
         right: 3rem;
         top: 3rem;
     }
-    .cerrar-modal img{
+    .cerrar-modal img {
         width: 3rem;
         cursor: pointer;
     }
+
     .contenedor-formulario {
         transition-property: all;
         transition-duration: 300ms;
@@ -144,9 +194,11 @@
     .contenedor-formulario.animar {
         opacity: 1;
     }
+
     .contenedor-formulario.cerrar {
         opacity: 0;
     }
+
     .nuevo-gasto {
         margin: 10rem auto 0 auto;
         display: grid;
@@ -178,6 +230,18 @@
         background-color: var(--azul);
         color: var(--blanco);
         font-weight: 700;
+        cursor: pointer;
+    }
+
+    .btn-eliminar {
+        border: none;
+        padding: 1rem;
+        width: 100%;
+        background-color: #ef4444;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: var(--blanco);
+        margin-top: 10rem;
         cursor: pointer;
     }
 </style>

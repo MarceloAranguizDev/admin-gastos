@@ -1,5 +1,5 @@
 <script setup>
-    import { formatearCantidad, formatearFecha } from '../helpers/index'
+    import { formatearCantidad, formatearFecha } from '../helpers/index'
     import IconoAhorro from '../assets/img/icono_ahorro.svg'
     import IconoCasa from '../assets/img/icono_casa.svg'
     import IconoComida from '../assets/img/icono_comida.svg'
@@ -24,6 +24,8 @@
             required: true
         }
     })
+
+    defineEmits(['seleccionar-gasto'])
 </script>
 
 <template>
@@ -35,16 +37,19 @@
                 class="icono"
             >
             <div class="detalles">
-                <p class="categoria">{{ gasto.categoria }}</p>
-                <p class="nombre">{{ gasto.nombre }}</p>
-
-                <p class="fecha">
-                    Fecha
-                    <span>{{ formatearFecha(gasto.fecha) }}</span>
+                <p class="categoria">{{gasto.categoria}}</p>
+                <p 
+                    class="nombre"
+                    @click="$emit('seleccionar-gasto', gasto.id)"
+                > {{ gasto.nombre }}</p>
+                <p class="fecha"> 
+                    Fecha:
+                    <span>{{ formatearFecha(gasto.fecha)}}</span>
                 </p>
             </div>
         </div>
-        <p class="cantidad">{{ formatearCantidad(gasto.cantidad) }}</p>
+
+        <p class="cantidad">{{ formatearCantidad(gasto.cantidad) }} </p>
     </div>
 </template>
 
@@ -87,7 +92,7 @@
     }
     .fecha span {
         font-weight: 400;
-    }
+    }   
     .cantidad {
         font-size: 3rem;
         font-weight: 900;

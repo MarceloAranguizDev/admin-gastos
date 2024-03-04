@@ -1,5 +1,5 @@
 <script setup>
-    import { ref } from 'vue';
+    import { ref } from 'vue'
     import Alerta from './Alerta.vue'
 
     const presupuesto = ref(0)
@@ -10,7 +10,6 @@
     const definirPresupuesto = () => {
         if(presupuesto.value <= 0 || presupuesto.value === '') {
             error.value = 'Presupuesto no válido'
-
             setTimeout(() => {
                 error.value = ''
             }, 3000);
@@ -26,6 +25,7 @@
         class="presupuesto"
         @submit.prevent="definirPresupuesto"
     >
+
         <Alerta
             v-if="error"
         >
@@ -33,7 +33,7 @@
         </Alerta>
 
         <div class="campo">
-            <label for="">Definir Presupueto</label>
+            <label for="nuevo-presupuesto">Definir Presupuesto</label>
 
             <input
                 id="nuevo-presupuesto"
@@ -49,11 +49,9 @@
     </form>
 </template>
 
-
-
 <style scoped>
     .presupuesto {
-        width: 100%;
+        width: 100%; 
     }
     .campo {
         display: grid;
@@ -72,7 +70,6 @@
         font-size: 2.2rem;
         text-align: center;
     }
-
     .presupuesto input[type="submit"] {
         background-color: var(--azul);
         border: none;
